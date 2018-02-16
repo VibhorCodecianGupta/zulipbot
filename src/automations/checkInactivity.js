@@ -81,13 +81,6 @@ async function checkInactivePullRequest(pullRequest, label) {
   const repoName = pullRequest.base.repo.name;
   const repoOwner = pullRequest.base.repo.owner.login;
   const number = pullRequest.number;
-<<<<<<< HEAD
-  const inactiveLabel = label.inactiveLabel;
-  const reviewedLabel = label.reviewedLabel;
-
-  if (inactiveLabel || !reviewedLabel) return;
-=======
->>>>>>> a31cd1348f86fb287186b08ca1564942a582b41d
 
   const comment = this.templates.get("updateWarning")
     .replace(new RegExp("{author}", "g"), author)

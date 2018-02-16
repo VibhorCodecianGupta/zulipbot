@@ -26,17 +26,28 @@ async function scrapePullRequests(pullRequests) {
   const iterator = pullRequests[Symbol.iterator]();
 
   for (let pullRequest of iterator) {
-    const time = Date.parse(pullRequest.updated_at);
+    let time = Date.parse(pullRequest.updated_at);
     const body = pullRequest.body;
     const number = pullRequest.number;
     const repoName = pullRequest.base.repo.name;
     const repoOwner = pullRequest.base.repo.owner.login;
 
-    const label = await extractPRLabels.call(this, repoOwner, repoName, number);
-    const needsReviewLabel = label.needsReviewLabel;
+    const response = await this.issues.getIssueLabels({
+      owner: repoOwner, repo: repoName, number: number
+    });
 
-    if (time + ims <= Date.now()) {
-      checkInactivePullRequest.call(this, pullRequest, label);
+    const labels = response.data.map(label => label.name);
+
+    const inactive = labels.find(label => label === this.cfg.activity.inactive);
+    const reviewed = labels.find(l => {
+      return l === this.cfg.activity.pullRequests.reviewed.label;
+    });
+    const needsReview = labels.find(l => {
+      return l === this.cfg.activity.pullRequests.needsReview.label;
+    });
+
+    if (time + ims <= Date.now() && !inactive && reviewed) {
+      checkInactivePullRequest.call(this, pullRequest);
     }
 
     const commits = await this.pullRequests.getCommits({
@@ -50,11 +61,17 @@ async function scrapePullRequests(pullRequests) {
     if (bodRef || refIssues.length) {
       const com = refIssues[0];
       const ref = com ? com.match(/#([0-9]+)/)[1] : body.match(/#([0-9]+)/)[1];
+<<<<<<< HEAD
       const data = {
         time: time,
         review: needsReviewLabel
       };
       references.set(`${repoName}/${ref}`, data);
+=======
+      const ignore = this.cfg.activity.pullRequests.needsReview.ignore;
+      if (needsReview && ignore) time = Date.now();
+      references.set(`${repoName}/${ref}`, time);
+>>>>>>> a31cd1348f86fb287186b08ca1564942a582b41d
     }
   }
 
@@ -72,10 +89,13 @@ async function checkInactivePullRequest(pullRequest, label) {
   const repoName = pullRequest.base.repo.name;
   const repoOwner = pullRequest.base.repo.owner.login;
   const number = pullRequest.number;
+<<<<<<< HEAD
   const inactiveLabel = label.inactiveLabel;
   const reviewedLabel = label.reviewedLabel;
 
   if (inactiveLabel || !reviewedLabel) return;
+=======
+>>>>>>> a31cd1348f86fb287186b08ca1564942a582b41d
 
   const comment = this.templates.get("updateWarning")
     .replace(new RegExp("{author}", "g"), author)
@@ -87,10 +107,10 @@ async function checkInactivePullRequest(pullRequest, label) {
   const com = comments.data.slice(-1).pop();
 
   // Use end of line comments to check if comment is from template
-  const lastComment = com ? com.body.endsWith("<!-- updateWarning -->") : null;
-  const fromClient = com ? com.user.login === this.cfg.auth.username : null;
+  const lastComment = com && com.body.endsWith("<!-- updateWarning -->");
+  const fromClient = com && com.user.login === this.cfg.auth.username;
 
-  if (reviewedLabel && !(lastComment && fromClient)) {
+  if (!lastComment || !fromClient) {
     this.issues.createComment({
       owner: repoOwner, repo: repoName, number: number, body: comment
     });

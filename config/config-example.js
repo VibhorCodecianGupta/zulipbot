@@ -12,7 +12,11 @@ exports.issues = {
       abandon: ["abandon", "unclaim", "abort"],
       newContributors: {
         permission: "pull",
-        restricted: 1
+        restricted: 1,
+        warn: {
+          labels: ["help wanted"],
+          presence: false
+        }
       }
     },
     label: {
@@ -122,7 +126,8 @@ exports.activity = {
       label: "reviewed"
     },
     needsReview: {
-      label: "needs review"
+      label: "needs review",
+      ignore: true
     }
   }
 };

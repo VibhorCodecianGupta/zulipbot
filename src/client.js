@@ -1,5 +1,4 @@
-const GitHub = require("github");
-const client = new GitHub();
+const client = require("github")();
 const fs = require("fs");
 
 client.cfg = require("../config/default.js");
@@ -72,7 +71,7 @@ client.findKeywords = string => {
     const tenses = [current, past, present];
 
     const matched = tenses.some(t => {
-      const regex = new RegExp(`${t} #([0-9]+)`, "i");
+      const regex = new RegExp(`${t}:? #([0-9]+)`, "i");
       return string.match(regex);
     });
 

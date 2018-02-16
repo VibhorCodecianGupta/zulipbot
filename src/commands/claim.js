@@ -1,10 +1,9 @@
-exports.run = async function(comment, issue, repository) {
-  const commenter = comment.user.login;
-  const repoName = repository.name;
-  const repoOwner = repository.owner.login;
-  const number = issue.number;
+exports.run = async function(payload, commenter, args) {
+  const repoName = payload.repository.name;
+  const repoOwner = payload.repository.owner.login;
+  const number = payload.issue.number;
 
-  if (issue.assignees.find(assignee => assignee.login === commenter)) {
+  if (payload.issue.assignees.find(assignee => assignee.login === commenter)) {
     const error = "**ERROR:** You have already claimed this issue.";
     return this.issues.createComment({
       owner: repoOwner, repo: repoName, number: number, body: error
@@ -31,6 +30,29 @@ exports.run = async function(comment, issue, repository) {
       const error = "**ERROR:** Unexpected response from GitHub API.";
       return this.issues.createComment({
         owner: repoOwner, repo: repoName, number: number, body: error
+      });
+    }
+
+    const labels = payload.issue.labels.map(label => label.name);
+
+    const warn = this.cfg.issues.commands.assign.newContributors.warn;
+    const present = warn.labels.some(label => labels.includes(label));
+    const absent = warn.labels.every(label => !labels.includes(label));
+    const alert = warn.presence ? present : absent;
+
+    if (!args.includes("--force") && alert) {
+      const one = warn.labels.length === 1;
+      const comment = this.templates.get("claimWarning")
+        .replace(new RegExp("{username}", "g"), this.cfg.auth.username)
+        .replace(new RegExp("{commenter}", "g"), commenter)
+        .replace(new RegExp("{state}", "g"), warn.presence ? "with" : "without")
+        .replace(new RegExp("{labelGrammar}", "g"), `label${one ? "" : "s"}`)
+        .replace(new RegExp("{repoName}", "g"), repoName)
+        .replace(new RegExp("{repoOwner}", "g"), repoOwner)
+        .replace(new RegExp("{list}", "g"), `"${warn.labels.join("\", \"")}"`);
+
+      return this.issues.createComment({
+        owner: repoOwner, repo: repoName, number: number, body: comment
       });
     }
 
@@ -80,7 +102,7 @@ async function validate(commenter, number, repoOwner, repoName) {
       .replace(new RegExp("{limit}", "g"), limit)
       .replace(new RegExp("{issue}", "g"), `issue${limit === 1 ? "" : "s"}`);
 
-    this.issues.createComment({
+    return this.issues.createComment({
       owner: repoOwner, repo: repoName, number: number, body: comment
     });
   }
@@ -103,4 +125,3 @@ async function claim(commenter, number, repoOwner, repoName) {
 
 const cfg = require("../../config/default.js");
 exports.aliases = cfg.issues.commands.assign.claim;
-exports.args = false;

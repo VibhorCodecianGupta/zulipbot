@@ -50,7 +50,8 @@ exports.issues = {
           labels: [],
           presence: false
         }
-      }
+      },
+      claimed: false
     },
     label: {
       add: [],

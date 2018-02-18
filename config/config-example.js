@@ -17,7 +17,8 @@ exports.issues = {
           labels: ["help wanted"],
           presence: false
         }
-      }
+      },
+      claimed: false
     },
     label: {
       add: ["label", "add"],

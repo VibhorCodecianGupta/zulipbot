@@ -43,6 +43,7 @@ exports.issues = {
     assign: {
       claim: [],
       abandon: [],
+      limit: Infinity,
       newContributors: {
         permission: null,
         restricted: Infinity,
@@ -72,7 +73,7 @@ exports.issues = {
   * - Continuous integration build updates
   */
 
-exports.pullRequests = {
+exports.pulls = {
   status: {
     mergeConflicts: null,
     wip: null,
@@ -109,7 +110,7 @@ exports.activity = {
     inProgress: null,
     clearClosed: false
   },
-  pullRequests: {
+  pulls: {
     autoUpdate: true,
     reviewed: {
       label: null,

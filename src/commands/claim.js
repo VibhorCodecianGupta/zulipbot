@@ -4,6 +4,7 @@ exports.run = async function(payload, commenter, args) {
   const number = payload.issue.number;
   const limit = this.cfg.issues.commands.assign.limit;
 
+
   if (payload.issue.assignees.find(assignee => assignee.login === commenter)) {
     const error = "**ERROR:** You have already claimed this issue.";
     return this.issues.createComment({

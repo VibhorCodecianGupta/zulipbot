@@ -17,7 +17,7 @@ exports.run = async function(issue, repo, label) {
   const uniqueTeams = Array.from(new Set(labelTeams));
 
   const areaTeams = `@${repoOwner}/` + uniqueTeams.join(`, @${repoOwner}/`);
-  const references = issueAreaLabels.join("**, **");
+  const references = issueAreaLabels.join("\", \"");
 
   const payload = issue.pull_request ? "pull request" : "issue";
   const labelSize = labelTeams.length === 1 ? "label" : "labels";
@@ -25,7 +25,7 @@ exports.run = async function(issue, repo, label) {
   const comment = this.templates.get("areaLabelNotification")
     .replace(new RegExp("{teams}", "g"), areaTeams)
     .replace(new RegExp("{payload}", "g"), payload)
-    .replace(new RegExp("{refs}", "g"), `**${references}**`)
+    .replace(new RegExp("{refs}", "g"), `"${references}"`)
     .replace(new RegExp("{labels}", "g"), labelSize);
 
   const issueComments = await this.issues.getComments({
@@ -41,10 +41,16 @@ exports.run = async function(issue, repo, label) {
   const tag = `${repoOwner}/${repoName}#${number}`;
 
   if (labelComment) {
-    this.issues.editComment({
-      owner: repoOwner, repo: repoName, id: labelComment.id, body: comment
-    });
-  } else if (!referenced.includes(tag)) {
+    if (issueAreaLabels.length) {
+      this.issues.editComment({
+        owner: repoOwner, repo: repoName, id: labelComment.id, body: comment
+      });
+    } else {
+      this.issues.deleteComment({
+        owner: repoOwner, repo: repoName, id: labelComment.id
+      });
+    }
+  } else if (!referenced.includes(tag) && issueAreaLabels.length) {
     this.issues.createComment({
       owner: repoOwner, repo: repoName, number: number, body: comment
     });

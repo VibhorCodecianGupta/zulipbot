@@ -2,11 +2,7 @@ exports.run = async function(payload, commenter, args) {
   const repoName = payload.repository.name;
   const repoOwner = payload.repository.owner.login;
   const number = payload.issue.number;
-<<<<<<< HEAD
-  const multiple = this.cfg.issues.commands.assign.multiple;
-=======
   const limit = this.cfg.issues.commands.assign.limit;
->>>>>>> 1ad4631acdce4ca7f24531e5326c5f71ec786e9e
 
   if (payload.issue.assignees.find(assignee => assignee.login === commenter)) {
     const error = "**ERROR:** You have already claimed this issue.";
@@ -15,11 +11,7 @@ exports.run = async function(payload, commenter, args) {
     });
   }
 
-<<<<<<< HEAD
-  if (payload.issue.assignees.length && !multiple) {
-=======
   if (payload.issue.assignees.length >= limit) {
->>>>>>> 1ad4631acdce4ca7f24531e5326c5f71ec786e9e
     const comment = this.templates.get("multipleClaimWarning")
       .replace(new RegExp("{commenter}", "g"), commenter);
 
